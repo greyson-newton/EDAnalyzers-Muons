@@ -10,7 +10,7 @@ process.MessageLogger.cerr.INFO = cms.untracked.PSet(
 )
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 
 process.source = cms.Source("PoolSource",
                                 # replace 'myfile.root' with the source file you want to use

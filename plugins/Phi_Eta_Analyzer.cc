@@ -37,7 +37,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH1D.h"
-
+#include "TH2F.h"
 #include <iostream>
 #include <iomanip>
 //
@@ -67,7 +67,8 @@ class Phi_Eta_Analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources> 
       // ----------member data ---------------------------
       edm::EDGetTokenT<pat::MuonCollection> muonToken_;
       unsigned int minTracks;
-      TH1D *tightMuonProfile;
+      TH1D *th1d_tight_muon;
+      TH2D *th2d_phi_eta;
       float nAllEvents;
       float nGlobal;
       float nStandAlone;
@@ -96,13 +97,14 @@ Phi_Eta_Analyzer::Phi_Eta_Analyzer(const edm::ParameterSet& iConfig)
 
 {
    edm::Service<TFileService> fs;
-   tightMuonProfile = fs->make<TH1D>("TightMuons", "Tight Muons", 7  , 0 , 7);
-   tightMuonProfile->GetXaxis()->SetBinLabel(1, "Global");
-   tightMuonProfile->GetXaxis()->SetBinLabel(2, "StandAlone");
-   tightMuonProfile->GetXaxis()->SetBinLabel(3, "PT");
-   tightMuonProfile->GetXaxis()->SetBinLabel(4, "Stations");
-   tightMuonProfile->GetXaxis()->SetBinLabel(5, "ValidDB");
-   tightMuonProfile->GetXaxis()->SetBinLabel(6, "Tight");
+   th1d_tight_muon = fs->make<TH1D>("TightMuons", "Tight Muons", 7  , 0 , 7);
+   th2d_phi_eta = fs->make<TH2D>("phi_eta_", "Tight Muons;Phi;Eta", 1, -3.14, 3.14, 1, -3.14, 3.14);
+   th1d_tight_muon->GetXaxis()->SetBinLabel(1, "Global");
+   th1d_tight_muon->GetXaxis()->SetBinLabel(2, "StandAlone");
+   th1d_tight_muon->GetXaxis()->SetBinLabel(3, "PT");
+   th1d_tight_muon->GetXaxis()->SetBinLabel(4, "Stations");
+   th1d_tight_muon->GetXaxis()->SetBinLabel(5, "ValidDB");
+   th1d_tight_muon->GetXaxis()->SetBinLabel(6, "Chi2");
 // now do what ever initialization is needed
     nAllEvents = 0.0f;
     nGlobal = 0.0f;
@@ -128,7 +130,7 @@ Phi_Eta_Analyzer::~Phi_Eta_Analyzer()
 // member functions
 //
 
-void
+   void
 Phi_Eta_Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using pat::MuonCollection;
@@ -139,49 +141,62 @@ Phi_Eta_Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 /*	
 	if(mu.isTightMuon())
 	{	
-		tightMuonProfile->Fill(5.5);
+		th1d_tight_muon->Fill(5.5);
 		nTightMuon++;
 	}
 */
 	if(mu.isGlobalMuon())
 	{
 		continue;
-	}
-		tightMuonProfile->Fill(0.5);
+	}		
+		th1d_tight_muon->Fill(0.5);
 		nGlobal++;
+		th2d_phi_eta->SetFillColor(1);
+		th2d_phi_eta->Fill(mu.phi(), mu.eta());;
+
 	if(mu.isStandAloneMuon())
 	{
 		continue;
 	}
-		tightMuonProfile->Fill(1.5);
+		th1d_tight_muon->Fill(1.5);
 		nStandAlone++;
+		th2d_phi_eta->SetFillColor(2);
+		th2d_phi_eta->Fill(mu.phi(), mu.eta());
+
 	if((mu.pt()>20) && (mu.pt()<200))
 	{
 		continue;}
-		tightMuonProfile->Fill(2.5);
+		th1d_tight_muon->Fill(2.5);
 		nPT++;
+		th2d_phi_eta->SetFillColor(3);
+		th2d_phi_eta->Fill(mu.phi(), mu.eta());
 	if(mu.numberOfMatchedStations() >= 2)
 	{
 		continue;
 	}
-		tightMuonProfile->Fill(3.5);
+		th1d_tight_muon->Fill(3.5);
 		nMatchedStations++;
+		th2d_phi_eta->SetFillColor(4);
+		th2d_phi_eta->Fill(mu.phi(), mu.eta());
 
         if(mu.dB() < 0.2)
         {
                 continue;
         }
 
-                tightMuonProfile->Fill(4.5);
+                th1d_tight_muon->Fill(4.5);
                 nDB++;
+		th2d_phi_eta->SetFillColor(5);
+		th2d_phi_eta->Fill(mu.phi(), mu.eta());
 /*	if(mu.globalTrack()->normalizedChi2() < 10)
 	{
 		continue;
 	}
-		tightMuonProfile->Fill(5.5);
+		th1d_tight_muon->Fill(5.5);
 		nChi2++;
-  */
- }
+*/
+ 
+} 
 #ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
    ESHandle<SetupData> pSetup;
    iSetup.get<SetupRecord>().get(pSetup);
